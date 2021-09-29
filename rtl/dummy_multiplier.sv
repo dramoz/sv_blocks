@@ -42,9 +42,9 @@ module dummy_multiplier
         end else begin
             product_dummy_pipe[0] <= multiplier * multiplicand;
             for(int i=1; i<DONE_PIPE_LVL; ++i)
-                product_dummy_pipe[i] <= product_dummy_pipe[i];
+                product_dummy_pipe[i] <= product_dummy_pipe[i-1];
             
-            done_dummy_pipe <= {done_dummy_pipe[DONE_PIPE_LVL-1:1], start};
+            done_dummy_pipe <= {done_dummy_pipe[DONE_PIPE_LVL-2:0], start};
             
             $display(done_dummy_pipe);
         end

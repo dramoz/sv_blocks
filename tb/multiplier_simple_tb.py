@@ -56,6 +56,7 @@ async def dummy_multiplier_basic_test(dut):
     dut.multiplicand <= 7
     dut.start <= 1
     await RisingEdge(dut.clk)
+    dut.start <= 0
     
     # Wait result
     max_cnt = 10
@@ -64,7 +65,12 @@ async def dummy_multiplier_basic_test(dut):
         max_cnt -= 1
         await RisingEdge(dut.clk)
     
-    assert dut.product == 5, f'5x7 -> 35, but got {dut.product.value}'
+    if(max_cnt != 0):
+        log.info(f'Data captured: {dut.product}')
+        assert dut.product == 35, f'5x7 -> 35, but got {dut.product.value}'
+    else:
+        log.error(f'max_cnt reached without done set')
+        assert False
     
     # Sim done
     await Timer(100, units='ns')
