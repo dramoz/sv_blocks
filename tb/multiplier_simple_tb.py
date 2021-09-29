@@ -51,11 +51,17 @@ async def dummy_multiplier_basic_test(dut):
     dut.reset <= 0
     
     # Set inputs
+    log.info("Doing 5x7 = 35")
     dut.multiplier   <= 5
     dut.multiplicand <= 7
+    dut.start <= 1
+    await RisingEdge(dut.clk)
     
     # Wait result
-    while dut.done == 0:
+    max_cnt = 10
+    while dut.done == 0 and max_cnt:
+        log.info("Waiting DUT ready")
+        max_cnt -= 1
         await RisingEdge(dut.clk)
     
     assert dut.product == 5, f'5x7 -> 35, but got {dut.product.value}'

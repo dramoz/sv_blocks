@@ -31,7 +31,7 @@ module dummy_multiplier
     output wire done,
     output wire [2*WL-1:0] product
 );
-
+    
     logic [DONE_PIPE_LVL-1:0] done_dummy_pipe;
     logic          [2*WL-1:0] product_dummy_pipe[DONE_PIPE_LVL];
 
@@ -41,13 +41,12 @@ module dummy_multiplier
             
         end else begin
             product_dummy_pipe[0] <= multiplier * multiplicand;
-            if(start == 1'b1) begin
-                done_dummy_pipe[0] <= 1'b1;
-                
-            end else begin
-                done_dummy_pipe[0] <= 1'b0;
-                
-            end
+            for(int i=1; i<DONE_PIPE_LVL; ++i)
+                product_dummy_pipe[i] <= product_dummy_pipe[i];
+            
+            done_dummy_pipe <= {done_dummy_pipe[DONE_PIPE_LVL-1:1], start};
+            
+            $display(done_dummy_pipe);
         end
     end
     
