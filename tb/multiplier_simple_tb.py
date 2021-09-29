@@ -13,6 +13,7 @@
 ## 
 #####################################################################################
 
+import os
 import logging
 from pathlib import Path
 
@@ -69,6 +70,9 @@ async def dummy_multiplier_basic_test(dut):
 # -----------------------------------------------------------------------------
 # Invoke test
 if __name__ == '__main__':
+    # cocotb-test default is icarus, switching to verilator
+    sim = os.environ.get('SIM', 'verilator')
+    os.environ['SIM'] = sim
     # ---------------------------------------
     _workpath = str(Path(__file__).resolve().parent)
     # ---------------------------------------
