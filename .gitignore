@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+sim_build/
+*.dfu
+results.xml
