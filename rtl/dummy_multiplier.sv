@@ -7,7 +7,7 @@
 /// This license message must appear in all versions of this code including
 /// modified versions.
 ///
-/// @brief Simple SV multipier for examples aid
+/// @brief Simple SV multipier for sanity TB testing and tools check
 /// 
 /// product = multiplier * multiplicand
 /// 
