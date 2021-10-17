@@ -7,7 +7,7 @@
 ## This license message must appear in all versions of this code including
 ## modified versions.
 ##
-## @brief Simple SV multipier testbench
+## @brief Simple SV multipier testbench to check tools installation
 ## 
 ## product = multiplier * multiplicand
 ## 

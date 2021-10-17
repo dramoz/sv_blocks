@@ -83,11 +83,56 @@ always_ff @(posedge clk) begin : tx_block
 end
 
 // --------------------------------------------------------------------------------
-logic rx_counter_enable;
-logic [CLKS_PER_BIT_WL-1:0] rx_bit_counter;
+localparam RX_FIRST_CAPTURE = CLKS_PER_BIT_WL/4;
+localparam RX_SECOND_CAPTURE = CLKS_PER_BIT_WL/2;
+localparam RX_LAST_CAPTURE = CLKS_PER_BIT_WL-RX_FIRST_CAPTURE;
 
-assign rx_valid = 1'b0;
-assign rx_data = '0;
-assign rx_err  = 1'b0;
+logic [CLKS_PER_BIT_WL:0] rx_bit_baudrate;
+logic [1:0] rx_bit_capture_cnt;
+enum {RX_IDLE, RX_NEXT_CAPTURE, RX_DATA_CAPTURE} rx_fsm;
+
+always_ff @(posedge clk) begin : tx_block
+    if(reset) begin
+        rx_valid <= 1'b0;
+        rx_fsm  <= RX_IDLE;
+        
+        tx_err <= 1'b0;
+        
+    end else begin
+        case(rx_fsm)
+            RX_IDLE: begin
+                if(rx_uart) begin: if_rx_new_capture
+                    rx_bit_capture_cnt <= 'b0;
+                    rx_bit_baudrate <= CLKS_PER_BIT_WL + RX_FIRST_CAPTURE;
+                    rx_fsm <= RX_NEXT_CAPTURE;
+                end
+            end
+            
+            RX_DATA_CLK_ALIGN: begin
+                if(tx_bit_baudrate < CLKS_PER_BIT) begin: if_sending_bit
+                        tx_bit_baudrate <= tx_bit_baudrate + 1;
+                end
+            end
+            TX_DATA_SEND: begin
+                tx_uart <= tx_data_buff[tx_bit_count];
+                
+                if(tx_bit_baudrate < CLKS_PER_BIT) begin: if_sending_bit
+                    tx_bit_baudrate <= tx_bit_baudrate + 1;
+                    
+                end else begin: if_done_sending_bit
+                    tx_bit_baudrate <= 'b0;
+                    if(tx_bit_count < TOTAL_BITS) begin: if_more_bits_to_send
+                        tx_bit_count <= tx_bit_count + 1;
+                        
+                    end else begin: if_done_all_bits
+                        tx_rdy <= 1'b1;
+                        tx_fsm <= TX_IDLE;
+                    end
+                    
+                end
+            end
+        endcase
+    end
+end
 
 endmodule
