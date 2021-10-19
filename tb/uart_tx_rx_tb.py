@@ -1,0 +1,109 @@
+#####################################################################################
+#  File: uart_tx_rx_tb.py
+#  Copyright (c) 2021 Danilo Ramos
+#  All rights reserved.
+#  This license message must appear in all versions of this code including
+#  modified versions.
+#  BSD 3-Clause
+####################################################################################
+#  Overview:
+"""
+Simple UART Testbench - CoCoTB module
+"""
+
+# -----------------------------------------------------------------------------
+# Info
+__author__ = 'Danilo Ramos'
+__copyright__ = 'Copyright (c) 2021'
+__credits__ = ['Danilo Ramos']
+__license__ = 'BSD 3-Clause'
+__version__ = "0.0.1"
+__maintainer__ = 'Danilo Ramos'
+__email__ = 'dramoz@gmail.com'
+
+# __status__ = ["Prototype"|"Development"|"Production"]
+__status__ = "Prototype"
+
+import sys, os
+import logging
+from pathlib import Path
+
+from math import ceil
+import random
+import cocotb
+from cocotb.clock import Clock
+from cocotb.triggers import FallingEdge, RisingEdge, Timer
+
+# -----------------------------------------------------------------------------
+# Internal modules
+_workpath = Path(__file__).resolve().parent
+sys.path.append(str(_workpath))
+
+from run_sim import run_cocotb
+
+# -----------------------------------------------------------------------------
+# Parameters
+CLK_FREQUENCY = 48000000
+CLK_PERIOD = ceil(1 / CLK_FREQUENCY * 1e9)
+CLK_PERIOD += CLK_PERIOD % 2
+CLK_PERIOD_UNITS = 'ns'
+BAUD_RATE = 115200
+
+parameters = {
+    'BAUD_RATE': BAUD_RATE,
+    'CLK_FREQUENCY': CLK_FREQUENCY,
+}
+
+# -----------------------------------------------------------------------------
+# CoCoTB Module
+@cocotb.test()
+async def uart_tx_test(dut):
+    """ Send 'Hello World! """
+    # Set logger
+    log = logging.getLogger("TB")
+    loglevel = os.environ.get("LOGLEVEL", 'INFO')
+    log.setLevel(loglevel)
+    
+    # Start test
+    log.info('UART TX test')
+    
+    # Setup TB
+    log.info(f'CLK: {CLK_PERIOD} {CLK_PERIOD_UNITS}')
+    clock = Clock(dut.clk, CLK_PERIOD, units=CLK_PERIOD_UNITS) 
+    cocotb.fork(clock.start())
+        
+    # Reset system
+    await FallingEdge(dut.clk)
+    log.info('Set reset')
+    dut.reset <= 1
+    await RisingEdge(dut.clk)
+    log.info('Release reset')
+    dut.reset <= 0
+    
+    # TX
+    data = b'Hello World!!!'
+    for ch in data:
+        while dut.tx_rdy.value == 0:
+            await RisingEdge(dut.clk)
+        
+        log.info(f'UART TX: {hex(ch)}')
+        dut.tx_data <= ch
+        dut.tx_vld <= 1
+        await RisingEdge(dut.clk)
+        dut.tx_vld <= 0
+    
+    await Timer(10*CLK_PERIOD, units=CLK_PERIOD_UNITS)
+    log.info('Test done!')
+# -----------------------------------------------------------------------------
+# Invoke test
+if __name__ == '__main__':
+    run_cocotb(
+        module=Path(__file__).stem,
+        test_name='uart_tx',
+        top_level='uart_tx_rx',
+        include_dirs=['../rtl'],
+        verilog_sources=['../rtl/uart_tx_rx.sv'],
+        parameters=parameters,
+        testcase=None
+    )
+    
