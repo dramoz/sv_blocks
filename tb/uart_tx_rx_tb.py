@@ -38,8 +38,13 @@ from cocotb.triggers import FallingEdge, RisingEdge, Timer
 # Internal modules
 _workpath = Path(__file__).resolve().parent
 sys.path.append(str(_workpath))
+from run_cocotb_sim import run_cocotb_sim
 
-from run_sim import run_cocotb
+HDL_VERIF_SCRIPTS = os.environ.get('HDL_VERIF_SCRIPTS')
+assert HDL_VERIF_SCRIPTS is not None, "HDL_VERIF_SCRIPTS env. var not found! (required for loading run_sim)"
+_hdl_verif_path = Path(HDL_VERIF_SCRIPTS) / 'hdl_verif'
+sys.path.append(str(_hdl_verif_path))
+#from run_cocotb_sim import run_cocotb_sim
 
 # -----------------------------------------------------------------------------
 # Parameters
@@ -97,12 +102,13 @@ async def uart_tx_test(dut):
 # -----------------------------------------------------------------------------
 # Invoke test
 if __name__ == '__main__':
-    run_cocotb(
-        module=Path(__file__).stem,
+    run_cocotb_sim(
+        py_module=Path(__file__).stem,
+        workpath=Path(__file__).resolve().parent,
         test_name='uart_tx',
         top_level='uart_tx_rx',
         include_dirs=['../rtl'],
-        verilog_sources=['../rtl/uart_tx_rx.sv'],
+        hdl_sources=['../rtl/uart_tx_rx.sv'],
         parameters=parameters,
         testcase=None
     )
