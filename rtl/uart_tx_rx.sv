@@ -86,49 +86,56 @@ end
 localparam RX_FIRST_CAPTURE = CLKS_PER_BIT_WL/4;
 localparam RX_SECOND_CAPTURE = CLKS_PER_BIT_WL/2;
 localparam RX_LAST_CAPTURE = CLKS_PER_BIT_WL-RX_FIRST_CAPTURE;
+localparam RX_BIT_CAPTURE[3] = {RX_SECOND_CAPTURE, RX_LAST_CAPTURE, RX_FIRST_CAPTURE};
 
-logic [CLKS_PER_BIT_WL:0] rx_bit_baudrate;
+logic [CLKS_PER_BIT_WL:0] rx_next_sample;
 logic [1:0] rx_bit_capture_cnt;
+logic [2:0] rx_bit_sample;
+logic [1:0] rx_bit_sample_cnt;
+logic [1:0] rx_bit_sample_pos;
+
 enum {RX_IDLE, RX_NEXT_CAPTURE, RX_DATA_CAPTURE} rx_fsm;
 
-always_ff @(posedge clk) begin : tx_block
+logic rx_bit_value;
+always_comb begin : set_rx_bit_value
+    if(
+        (rx_bit_sample[0] && rx_bit_sample[1])
+        || (rx_bit_sample[0] && rx_bit_sample[2])
+        || (rx_bit_sample[1] && rx_bit_sample[2])
+    ) begin
+        rx_bit_value = 1'b1;
+    end else begin
+        rx_bit_value = 1'b0;
+    end
+end
+
+always_ff @(posedge clk) begin : rx_block
     if(reset) begin
         rx_valid <= 1'b0;
-        rx_fsm  <= RX_IDLE;
+        rx_fsm   <= RX_IDLE;
         
-        tx_err <= 1'b0;
+        rx_err <= 1'b0;
         
     end else begin
         case(rx_fsm)
             RX_IDLE: begin
                 if(rx_uart) begin: if_rx_new_capture
-                    rx_bit_capture_cnt <= 'b0;
-                    rx_bit_baudrate <= CLKS_PER_BIT_WL + RX_FIRST_CAPTURE;
-                    rx_fsm <= RX_NEXT_CAPTURE;
+                    rx_bit_capture_cnt <= '0;
+                    rx_bit_sample_cnt  <= '0;
+                    rx_next_sample     <= CLKS_PER_BIT + RX_FIRST_CAPTURE;
+                    rx_fsm             <= RX_NEXT_CAPTURE;
                 end
             end
             
-            RX_DATA_CLK_ALIGN: begin
-                if(tx_bit_baudrate < CLKS_PER_BIT) begin: if_sending_bit
-                        tx_bit_baudrate <= tx_bit_baudrate + 1;
-                end
-            end
-            TX_DATA_SEND: begin
-                tx_uart <= tx_data_buff[tx_bit_count];
-                
-                if(tx_bit_baudrate < CLKS_PER_BIT) begin: if_sending_bit
-                    tx_bit_baudrate <= tx_bit_baudrate + 1;
-                    
-                end else begin: if_done_sending_bit
-                    tx_bit_baudrate <= 'b0;
-                    if(tx_bit_count < TOTAL_BITS) begin: if_more_bits_to_send
-                        tx_bit_count <= tx_bit_count + 1;
+            RX_NEXT_CAPTURE: begin
+                rx_next_sample <= rx_next_sample - 1;
+                if(rx_next_sample == '0) begin: if_sample_bit
+                    rx_bit_sample[rx_bit_sample_cnt] <= rx_uart
+                    rx_bit_sample_cnt <= rx_bit_sample_cnt + 1;
+                    rx_next_sample <= RX_BIT_CAPTURE[rx_bit_sample_cnt];
+                    if(rx_bit_sample_cnt==2) begin: if_done_bit_sample
                         
-                    end else begin: if_done_all_bits
-                        tx_rdy <= 1'b1;
-                        tx_fsm <= TX_IDLE;
                     end
-                    
                 end
             end
         endcase
