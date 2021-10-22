@@ -110,6 +110,7 @@ always_ff @(posedge clk) begin : rx_block
     end else begin
         case(rx_fsm)
             RX_IDLE: begin
+                rx_valid <= 1'b0;
                 if(rx_uart) begin: if_rx_new_capture
                     rx_bit_capture_cnt       <= '0;
                     rx_bit_sample_cnt        <= '0;
@@ -151,8 +152,6 @@ always_ff @(posedge clk) begin : rx_block
                     
                     rx_bit_capture_cnt  <= rx_bit_capture_cnt + 1;
                     if(rx_bit_capture_cnt==(DATA_BITS-1)) begin
-                        rx_valid <= 1'b1;
-                        
                         rx_fsm              <= RX_STOP_BIT;
                         rx_next_sample_clks <= {1'b0, CLKS_PER_BIT};
                     end else begin
@@ -163,9 +162,9 @@ always_ff @(posedge clk) begin : rx_block
             end
             
             RX_STOP_BIT: begin
-                rx_valid <= 1'b0;
                 rx_next_sample_clks <= rx_next_sample_clks - 1;
                 if(rx_next_sample_clks == '0) begin: if_end_stop_bit
+                    rx_valid <= 1'b1;
                     rx_fsm   <= RX_IDLE;
                 end
             end

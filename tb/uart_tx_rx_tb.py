@@ -32,7 +32,7 @@ from math import ceil
 import random
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge, RisingEdge, Timer
+from cocotb.triggers import FallingEdge, RisingEdge, Timer, ReadWrite
 
 # -----------------------------------------------------------------------------
 # Internal modules
@@ -63,8 +63,9 @@ parameters = {
 # CoCoTB Module
 async def uart_rx_loop(dut):
     while True:
-        dut.rx_uart <= dut.tx_uart.value
         await RisingEdge(dut.clk)
+        await ReadWrite()
+        dut.rx_uart <= dut.tx_uart.value
     
 @cocotb.test()
 async def uart_tx_test(dut):
@@ -94,10 +95,16 @@ async def uart_tx_test(dut):
     cocotb.fork(uart_rx_loop(dut))
     
     # TX
-    data = b'\x55' #b'\x7f'  #b'Hello World!!!'
+    #data = b'\x55'
+    data = b'He'
+    #data = b'\x7f'
+    #data = b'Hello World!!!'
     for ch in data:
-        while dut.tx_rdy.value == 0:
+        while True:
             await RisingEdge(dut.clk)
+            await ReadWrite()
+            if dut.tx_rdy.value == 1:
+                break
         
         log.info(f'UART TX: {hex(ch)}')
         dut.tx_data <= ch
