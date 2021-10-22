@@ -1,78 +1,84 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Tue Sep  7 00:13:34 2021
+[*] Fri Oct 22 03:20:28 2021
 [*]
-[dumpfile] "/home/dramoz/dev/OrangeCrab-test/tb/sim_build/uart_tx/dump.fst"
-[dumpfile_mtime] "Tue Sep  7 00:09:50 2021"
-[dumpfile_size] 969
-[savefile] "/home/dramoz/dev/OrangeCrab-test/tb/uart_tx_rx_tb.gtkw"
+[dumpfile] "/home/dramoz/dev/sv_blocks/tb/sim_build/uart_tx/dump.fst"
+[dumpfile_mtime] "Fri Oct 22 03:19:35 2021"
+[dumpfile_size] 4465
+[savefile] "/home/dramoz/dev/sv_blocks/tb/uart_tx_rx_tb.gtkw"
 [timestart] 0
-[size] 2560 1219
+[size] 2560 1324
 [pos] -1 -1
-*-15.786637 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-23.855036 9284000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] .
-[sst_width] 233
-[signals_width] 331
+[sst_width] 520
+[signals_width] 369
 [sst_expanded] 1
-[sst_vpaned_height] 360
-@c00200
--Parameters
-@24
-uart_tx_rx.CLKS_PER_BIT
-@420
-uart_tx_rx.CLKS_PER_BIT_WL
-uart_tx_rx.DATA_BITS
-uart_tx_rx.TOTAL_BITS
-uart_tx_rx.TOTAL_BITS_WL
-@1401200
--Parameters
+[sst_vpaned_height] 396
 @28
-uart_tx_rx.reset
-uart_tx_rx.clk
-@800200
--uart_tx
+reset
+clk
+@200
+-----------
 @28
-uart_tx_rx.tx_rdy
-uart_tx_rx.tx_vld
+tx_err
+tx_rdy
+tx_vld
+@22
+tx_data[7:0]
+@28
+tx_uart
+@200
+-----------
 @100000028
 uart_tx_rx.tx_fsm
+@24
+uart_tx_rx.tx_bit_count[3:0]
 @c00022
-uart_tx_rx.tx_data[7:0]
+uart_tx_rx.tx_data_buff[9:0]
 @28
-(0)uart_tx_rx.tx_data[7:0]
-(1)uart_tx_rx.tx_data[7:0]
-(2)uart_tx_rx.tx_data[7:0]
-(3)uart_tx_rx.tx_data[7:0]
-(4)uart_tx_rx.tx_data[7:0]
-(5)uart_tx_rx.tx_data[7:0]
-(6)uart_tx_rx.tx_data[7:0]
-(7)uart_tx_rx.tx_data[7:0]
+(0)uart_tx_rx.tx_data_buff[9:0]
+(1)uart_tx_rx.tx_data_buff[9:0]
+(2)uart_tx_rx.tx_data_buff[9:0]
+(3)uart_tx_rx.tx_data_buff[9:0]
+(4)uart_tx_rx.tx_data_buff[9:0]
+(5)uart_tx_rx.tx_data_buff[9:0]
+(6)uart_tx_rx.tx_data_buff[9:0]
+(7)uart_tx_rx.tx_data_buff[9:0]
+(8)uart_tx_rx.tx_data_buff[9:0]
+(9)uart_tx_rx.tx_data_buff[9:0]
 @1401200
 -group_end
-@22
-uart_tx_rx.tx_data_buff[9:0]
-uart_tx_rx.tx_bit_baudrate[8:0]
-uart_tx_rx.tx_bit_count[3:0]
+@201
+-----------
+@100000028
+uart_tx_rx.rx_fsm
 @28
-uart_tx_rx.tx_uart
-@29
-uart_tx_rx.tx_err
-@1000200
--uart_tx
-@c00200
--uart_rx
+rx_err
+rx_uart
+rx_valid
 @22
-uart_tx_rx.rx_bit_counter[8:0]
+rx_data[7:0]
 @28
-uart_tx_rx.rx_counter_enable
+uart_tx_rx.sample_pulse
+@200
+-----------
+@100000028
+uart_tx_rx.rx_fsm
 @22
-uart_tx_rx.rx_data[7:0]
+uart_tx_rx.rx_next_sample_clks[9:0]
 @28
-uart_tx_rx.rx_err
-uart_tx_rx.rx_rdy
-uart_tx_rx.rx_uart
-uart_tx_rx.rx_valid
+uart_tx_rx.rx_bit_capture_cnt[2:0]
+@c00028
+uart_tx_rx.rx_bit_sample_cnt[1:0]
+@28
+(0)uart_tx_rx.rx_bit_sample_cnt[1:0]
+(1)uart_tx_rx.rx_bit_sample_cnt[1:0]
 @1401200
--uart_rx
+-group_end
+@28
+uart_tx_rx.rx_bit_curr_sample_value[1:0]
+@200
+-----------
 [pattern_trace] 1
 [pattern_trace] 0

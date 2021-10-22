@@ -61,6 +61,11 @@ parameters = {
 
 # -----------------------------------------------------------------------------
 # CoCoTB Module
+async def uart_rx_loop(dut):
+    while True:
+        dut.rx_uart <= dut.tx_uart.value
+        await RisingEdge(dut.clk)
+    
 @cocotb.test()
 async def uart_tx_test(dut):
     """ Send 'Hello World! """
@@ -85,8 +90,11 @@ async def uart_tx_test(dut):
     log.info('Release reset')
     dut.reset <= 0
     
+    # RX
+    cocotb.fork(uart_rx_loop(dut))
+    
     # TX
-    data = b'Hello World!!!'
+    data = b'\x7f' #b'Hello World!!!'
     for ch in data:
         while dut.tx_rdy.value == 0:
             await RisingEdge(dut.clk)
@@ -97,8 +105,10 @@ async def uart_tx_test(dut):
         await RisingEdge(dut.clk)
         dut.tx_vld <= 0
     
-    await Timer(10*CLK_PERIOD, units=CLK_PERIOD_UNITS)
+    await RisingEdge(dut.tx_rdy)
+    await Timer(1000*CLK_PERIOD, units=CLK_PERIOD_UNITS)
     log.info('Test done!')
+
 # -----------------------------------------------------------------------------
 # Invoke test
 if __name__ == '__main__':

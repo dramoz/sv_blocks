@@ -16,13 +16,13 @@ module count_ones
 )
 (
     input  wire [WL-1:0]           din,
-    output wire [$clog2(WL+1)-1:0] count_ones
-)
+    output logic [$clog2(WL+1)-1:0] count
+);
 
-always_comb begin : count_ones
-    count_ones = 'b0;
+always_comb begin : count_ones_comb
+    count = 'b0;
     for(int inx=0; inx < WL; inx=inx+1) begin
-        count_ones = count_ones + din[inx];
+        count = count + din[inx];
     end
 end
 
