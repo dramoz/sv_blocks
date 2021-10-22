@@ -153,10 +153,10 @@ always_ff @(posedge clk) begin : rx_block
                     rx_bit_capture_cnt  <= rx_bit_capture_cnt + 1;
                     if(rx_bit_capture_cnt==(DATA_BITS-1)) begin
                         rx_fsm              <= RX_STOP_BIT;
-                        rx_next_sample_clks <= {1'b0, CLKS_PER_BIT};
+                        rx_next_sample_clks <= CLKS_PER_BIT-RX_LAST_SAMPLE_CLKS;  // OK to exit before stop bit is done
                     end else begin
                         rx_fsm              <= RX_SAMPLING;
-                        rx_next_sample_clks <= RX_SAMPLE_CLKS;
+                        rx_next_sample_clks <= {1'b0, RX_SAMPLE_CLKS};
                     end
                 end
             end
