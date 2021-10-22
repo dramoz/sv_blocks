@@ -94,7 +94,7 @@ async def uart_tx_test(dut):
     cocotb.fork(uart_rx_loop(dut))
     
     # TX
-    data = b'\x7f' #b'Hello World!!!'
+    data = b'\x55' #b'\x7f'  #b'Hello World!!!'
     for ch in data:
         while dut.tx_rdy.value == 0:
             await RisingEdge(dut.clk)

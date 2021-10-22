@@ -70,7 +70,7 @@ always_ff @(posedge clk) begin : tx_block
                     
                 end else begin: if_done_sending_bit
                     tx_bit_baudrate <= 'b0;
-                    if(tx_bit_count < TOTAL_BITS) begin: if_more_bits_to_send
+                    if(tx_bit_count < (TOTAL_BITS-1)) begin: if_more_bits_to_send
                         tx_bit_count <= tx_bit_count + 1;
                         
                     end else begin: if_done_all_bits
@@ -88,16 +88,14 @@ end
 localparam RX_SAMPLES_WL = $clog2(RX_SAMPLES);
 localparam logic [CLKS_PER_BIT_WL-1:0] RX_SAMPLE_CLKS = CLKS_PER_BIT/(RX_SAMPLES+1);
 localparam logic [CLKS_PER_BIT_WL-1:0] RX_LAST_SAMPLE_CLKS = CLKS_PER_BIT-RX_SAMPLES*RX_SAMPLE_CLKS;
-localparam logic [CLKS_PER_BIT_WL-1:0] RX_STOP_BIT_CLKS = CLKS_PER_BIT+RX_LAST_SAMPLE_CLKS;
 
 logic [DATA_BITS_WL-1:0]  rx_bit_capture_cnt;
 logic [RX_SAMPLES_WL-1:0] rx_bit_sample_cnt;
-logic [RX_SAMPLES_WL-1:0] rx_bit_curr_sample_value;
+logic [RX_SAMPLES_WL:0]   rx_bit_curr_sample_value;
 
 logic [CLKS_PER_BIT_WL:0] rx_next_sample_clks;
-enum {RX_IDLE, RX_NEXT_CAPTURE, RX_STOP_BIT} rx_fsm;
+enum {RX_IDLE, RX_SAMPLING, RX_STORE_BIT_VL, RX_STOP_BIT} rx_fsm;
 
-logic baud_rate;
 logic sample_pulse;
 
 always_ff @(posedge clk) begin : rx_block
@@ -108,7 +106,6 @@ always_ff @(posedge clk) begin : rx_block
         rx_err <= 1'b0;
         
         sample_pulse <= 1'b0;
-        baud_rate    <= 1'b0;
                     
     end else begin
         case(rx_fsm)
@@ -119,14 +116,13 @@ always_ff @(posedge clk) begin : rx_block
                     rx_bit_curr_sample_value <= '0;
                     
                     rx_next_sample_clks <= CLKS_PER_BIT + RX_SAMPLE_CLKS;
-                    rx_fsm              <= RX_NEXT_CAPTURE;
+                    rx_fsm              <= RX_SAMPLING;
                     
                     sample_pulse <= 1'b1;
-                    baud_rate    <= 1'b1;
                 end
             end
             
-            RX_NEXT_CAPTURE: begin
+            RX_SAMPLING: begin
                 rx_next_sample_clks <= rx_next_sample_clks - 1;
                 sample_pulse <= 1'b0;
                 if(rx_next_sample_clks == '0) begin: if_sample_bit
@@ -134,22 +130,34 @@ always_ff @(posedge clk) begin : rx_block
                     rx_bit_curr_sample_value <= (rx_uart==1'b1)?(rx_bit_curr_sample_value+1):(rx_bit_curr_sample_value-1);
                     
                     rx_bit_sample_cnt <= rx_bit_sample_cnt + 1;
-                    if(rx_bit_sample_cnt==(RX_SAMPLES-1)) begin: if_done_bit_sample
-                        baud_rate <= ~baud_rate;
-                        rx_data[rx_bit_capture_cnt] <= (rx_bit_curr_sample_value>0)?(1'b1):(1'b0);
-                        
-                        rx_bit_sample_cnt   <= '0;
-                        rx_bit_capture_cnt  <= rx_bit_capture_cnt + 1;
-                        if(rx_bit_capture_cnt==(DATA_BITS-1)) begin
-                            rx_valid <= 1'b1;
-                            rx_fsm   <= RX_STOP_BIT;
-                            rx_next_sample_clks <= {1'b0, RX_STOP_BIT_CLKS};
-                        end else begin
-                            rx_next_sample_clks <= RX_SAMPLE_CLKS+RX_LAST_SAMPLE_CLKS;
-                        end
+                    if(rx_bit_sample_cnt==(RX_SAMPLES-1)) begin: if_bit_sample_done
+                        rx_bit_sample_cnt        <= '0;
+                        rx_next_sample_clks <= RX_LAST_SAMPLE_CLKS;
+                        rx_fsm <= RX_STORE_BIT_VL;
                         
                     end else begin
                         rx_next_sample_clks <= {1'b0, RX_SAMPLE_CLKS};
+                    end
+                end
+            end
+            
+            RX_STORE_BIT_VL: begin
+                rx_next_sample_clks <= rx_next_sample_clks - 1;
+                sample_pulse <= 1'b0;
+                if(rx_next_sample_clks == '0) begin: if_store_bit
+                    sample_pulse <= 1'b1;
+                    rx_data[rx_bit_capture_cnt] <= (rx_bit_curr_sample_value[RX_SAMPLES_WL]==1'b0)?(1'b1):(1'b0);
+                    rx_bit_curr_sample_value <= '0;
+                    
+                    rx_bit_capture_cnt  <= rx_bit_capture_cnt + 1;
+                    if(rx_bit_capture_cnt==(DATA_BITS-1)) begin
+                        rx_valid <= 1'b1;
+                        
+                        rx_fsm              <= RX_STOP_BIT;
+                        rx_next_sample_clks <= {1'b0, CLKS_PER_BIT};
+                    end else begin
+                        rx_fsm              <= RX_SAMPLING;
+                        rx_next_sample_clks <= RX_SAMPLE_CLKS;
                     end
                 end
             end
