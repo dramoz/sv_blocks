@@ -86,7 +86,7 @@ end
 localparam RX_FIRST_CAPTURE = CLKS_PER_BIT_WL/4;
 localparam RX_SECOND_CAPTURE = CLKS_PER_BIT_WL/2;
 localparam RX_LAST_CAPTURE = CLKS_PER_BIT_WL-RX_FIRST_CAPTURE;
-localparam RX_BIT_CAPTURE[3] = {RX_SECOND_CAPTURE, RX_LAST_CAPTURE, RX_FIRST_CAPTURE};
+localparam integer RX_BIT_CAPTURE[3] = '{RX_SECOND_CAPTURE, RX_LAST_CAPTURE, RX_FIRST_CAPTURE};
 
 logic [CLKS_PER_BIT_WL:0] rx_next_sample;
 logic [1:0] rx_bit_capture_cnt;
@@ -130,11 +130,12 @@ always_ff @(posedge clk) begin : rx_block
             RX_NEXT_CAPTURE: begin
                 rx_next_sample <= rx_next_sample - 1;
                 if(rx_next_sample == '0) begin: if_sample_bit
-                    rx_bit_sample[rx_bit_sample_cnt] <= rx_uart
+                    rx_bit_sample[rx_bit_sample_cnt] <= rx_uart;
                     rx_bit_sample_cnt <= rx_bit_sample_cnt + 1;
                     rx_next_sample <= RX_BIT_CAPTURE[rx_bit_sample_cnt];
                     if(rx_bit_sample_cnt==2) begin: if_done_bit_sample
-                        
+                        rx_data[rx_bit_capture_cnt] <= rx_bit_value;
+                        rx_bit_capture_cnt <= rx_bit_capture_cnt + 1;
                     end
                 end
             end
