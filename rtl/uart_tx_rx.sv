@@ -96,17 +96,12 @@ logic [RX_SAMPLES_WL:0]   rx_bit_curr_sample_value;
 logic [CLKS_PER_BIT_WL:0] rx_next_sample_clks;
 enum {RX_IDLE, RX_SAMPLING, RX_STORE_BIT_VL, RX_STOP_BIT} rx_fsm;
 
-logic sample_pulse;
-
 always_ff @(posedge clk) begin : rx_block
     if(reset) begin
         rx_valid <= 1'b0;
         rx_fsm   <= RX_IDLE;
-        
         rx_err <= 1'b0;
         
-        sample_pulse <= 1'b0;
-                    
     end else begin
         case(rx_fsm)
             RX_IDLE: begin
@@ -118,16 +113,12 @@ always_ff @(posedge clk) begin : rx_block
                     
                     rx_next_sample_clks <= CLKS_PER_BIT + RX_SAMPLE_CLKS;
                     rx_fsm              <= RX_SAMPLING;
-                    
-                    sample_pulse <= 1'b1;
                 end
             end
             
             RX_SAMPLING: begin
                 rx_next_sample_clks <= rx_next_sample_clks - 1;
-                sample_pulse <= 1'b0;
                 if(rx_next_sample_clks == '0) begin: if_sample_bit
-                    sample_pulse <= 1'b1;
                     rx_bit_curr_sample_value <= (rx_uart==1'b1)?(rx_bit_curr_sample_value+1):(rx_bit_curr_sample_value-1);
                     
                     rx_bit_sample_cnt <= rx_bit_sample_cnt + 1;
@@ -144,9 +135,7 @@ always_ff @(posedge clk) begin : rx_block
             
             RX_STORE_BIT_VL: begin
                 rx_next_sample_clks <= rx_next_sample_clks - 1;
-                sample_pulse <= 1'b0;
                 if(rx_next_sample_clks == '0) begin: if_store_bit
-                    sample_pulse <= 1'b1;
                     rx_data[rx_bit_capture_cnt] <= (rx_bit_curr_sample_value[RX_SAMPLES_WL]==1'b0)?(1'b1):(1'b0);
                     rx_bit_curr_sample_value <= '0;
                     

@@ -38,13 +38,13 @@ from cocotb.triggers import FallingEdge, RisingEdge, Timer, ReadWrite
 # Internal modules
 _workpath = Path(__file__).resolve().parent
 sys.path.append(str(_workpath))
-from run_cocotb_sim import run_cocotb_sim
 
 HDL_VERIF_SCRIPTS = os.environ.get('HDL_VERIF_SCRIPTS')
 assert HDL_VERIF_SCRIPTS is not None, "HDL_VERIF_SCRIPTS env. var not found! (required for loading run_sim)"
-_hdl_verif_path = Path(HDL_VERIF_SCRIPTS) / 'hdl_verif'
+_hdl_verif_path = Path(HDL_VERIF_SCRIPTS) / 'src/hdl_verif'
 sys.path.append(str(_hdl_verif_path))
-#from run_cocotb_sim import run_cocotb_sim
+print(_hdl_verif_path)
+from run_cocotb_sim import run_cocotb_sim
 
 # -----------------------------------------------------------------------------
 # Parameters
